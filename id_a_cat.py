@@ -1,10 +1,22 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import tensorflow as tf
 from argparse import ArgumentParser
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing import image
 import numpy as np
+from argparse import ArgumentParser
+import logging
 
+
+# Configure the logging system
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    filename='app.log',
+    filemode='w'
+)
 
 
 def max_tag_for_cat(image_path, model):
@@ -31,7 +43,7 @@ def max_tag_for_cat(image_path, model):
 def detect_cat(image_path, model, num_tags):
 
     # Load and preprocess the image
-    img = image.load_img(image_path, target_size=(224, 224))
+    img = image.load_img(image_path)
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = preprocess_input(x)
@@ -88,28 +100,35 @@ def parse_arguments():
     return args
 
 
-args = parse_arguments()
 
-# Example usage
-images_root = args.pic_path
-cat_res = {}
-for cat_root in os.listdir(images_root):
 
-  cat_root = os.path.join(images_root, cat_root)
-  if os.path.isdir(cat_root):  
-    print(f'cat_root = {cat_root}')    
-    cat_res[cat_root] = {}
-    num_tags = 0
-    ratio = 0.0
+def try_different_num_tags(cat_res, cat_root):
+  logger.info(f'cat_root = {cat_root}')    
+  cat_res[cat_root] = {}
+  num_tags = 0
+  ratio = 0.0
 
-    while ratio < 0.99:
-      num_tags += 10
-      ratio = detect_cat_in_folder(cat_root, num_tags)
-      print(f'Ratio is {ratio} for num_tags = {num_tags}')    
-      cat_res[cat_root][num_tags] = ratio
+  while ratio < 0.99:
+    num_tags += 10
+    ratio = detect_cat_in_folder(cat_root, num_tags)
+    logger.info(f'Ratio is {ratio} for num_tags = {num_tags}') 
+    cat_res[cat_root][num_tags] = ratio
 
-for c in cat_res:
-   print(f'{c} : {cat_res[c]}')
+if __name__ == "__main__":
+  logger = logging.getLogger('my_app')
+  args = parse_arguments()
+
+  images_root = args.pic_path
+  cat_res = {}
+  try_different_num_tags(cat_res,images_root)
+  for cat_root in os.listdir(images_root):
+    cat_root = os.path.join(images_root, cat_root)
+    if os.path.isdir(cat_root):  
+      try_different_num_tags(cat_res, cat_root)
+
+
+  for c in cat_res:
+     print(f'{c} : {cat_res[c]}')
      
    
 
