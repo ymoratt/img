@@ -5,6 +5,27 @@ from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_i
 from tensorflow.keras.preprocessing import image
 import numpy as np
 
+
+
+def max_tag_for_cat(image_path, model):
+
+    # Load and preprocess the image
+    img = image.load_img(image_path, target_size=(224, 224))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
+
+
+    # Make predictions
+    predictions = model.predict(x)
+    decoded_predictions = decode_predictions(predictions, top=1000)[0]
+    for _, label, score in decoded_predictions:
+        if 'cat' in label.lower():
+            return True, f"Cat detected with confidence {score:.2f} in image {image_path}"
+
+    return False, f"No cat detected in the image {image_path}"
+
+
  
 
 def detect_cat(image_path, model, num_tags):
@@ -73,16 +94,22 @@ args = parse_arguments()
 images_root = args.pic_path
 cat_res = {}
 for cat_root in os.listdir(images_root):
-  cat_res[cat_root] = {}
-  num_tags = 0
-  ratio = 0.0
-  while ratio < 100.0:
-    num_tags += 30
-    ratio = detect_cat_in_folder(images_root, num_tags)
-    cat_res[cat_root][num_tags] = ratio
+
+  cat_root = os.path.join(images_root, cat_root)
+  if os.path.isdir(cat_root):  
+    print(f'cat_root = {cat_root}')    
+    cat_res[cat_root] = {}
+    num_tags = 0
+    ratio = 0.0
+
+    while ratio < 0.99:
+      num_tags += 10
+      ratio = detect_cat_in_folder(cat_root, num_tags)
+      print(f'Ratio is {ratio} for num_tags = {num_tags}')    
+      cat_res[cat_root][num_tags] = ratio
 
 for c in cat_res:
-   print(cat_res[c])
+   print(f'{c} : {cat_res[c]}')
      
    
 
