@@ -10,7 +10,7 @@ import numpy as np
 def max_tag_for_cat(image_path, model):
 
     # Load and preprocess the image
-    img = image.load_img(image_path, target_size=(224, 224))
+    img = image.load_img(image_path)
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = preprocess_input(x)
