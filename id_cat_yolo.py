@@ -31,6 +31,26 @@ def detect_objects(model, image_path):
     
     return img, detected_objects
 
+def get_yolo_format_string(x1, y1, x2, y2, height, width):
+    #Lemamaesh!
+    pass
+
+def label_image(image_name, img, detected_objects, image_label):
+    for _, obj in detected_objects.iterrows():
+        x1, y1, x2, y2 = int(obj['xmin']), int(obj['ymin']), int(obj['xmax']), int(obj['ymax'])
+        label = f"{obj['name']} {obj['confidence']:.2f}"
+        if obj['name'].lower().strip() == 'cat':
+            #TODO: update to real height!            
+            height = 300
+            #TODO: update to real height!
+            width = 640
+            yolo_str = get_yolo_format_string(int(x1), int(y1), int(x2), int(y2), int(height), int(width))
+            with open(image_name +'.xml.txt', 'w') as LABEL:
+                LABEL.write(yolo_str)
+                
+
+
+
 def draw_boxes(img, detected_objects):
     # Convert PIL Image to OpenCV format
     img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -38,12 +58,13 @@ def draw_boxes(img, detected_objects):
     for _, obj in detected_objects.iterrows():
         x1, y1, x2, y2 = int(obj['xmin']), int(obj['ymin']), int(obj['xmax']), int(obj['ymax'])
         label = f"{obj['name']} {obj['confidence']:.2f}"
-        
-        # Draw bounding box
-        cv2.rectangle(img_cv, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        
-        # Put label
-        cv2.putText(img_cv, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        if obj['name'].lower().strip() == 'cat':
+            # Draw bounding box
+            cv2.rectangle(img_cv, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # Put label
+            cv2.putText(img_cv, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
     
     return img_cv
 
