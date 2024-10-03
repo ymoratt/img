@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 import logging
 import id_cat_yolo
 import cv2
+import shutil
 
 
 logging.basicConfig(
@@ -28,6 +29,9 @@ def detect_cat_in_folder(model_module, images_root, num_tags, disp_img):
   num_cat_images = 0
   # Load the MobileNetV2 model pre-trained on ImageNet
   model = model_module.load_model()
+  un_id_cat_dir = os.path.join(images_root,'unidentified_cat')
+  if not  os.path.isdir(un_id_cat_dir):
+     os.mkdir(un_id_cat_dir)
   
   logger.info(f'looking for pics in  {images_root} ')
   for img_name in os.listdir(images_root):
@@ -43,6 +47,8 @@ def detect_cat_in_folder(model_module, images_root, num_tags, disp_img):
       if (model_module.has_cat(detected_objects)):
         num_cat_images += 1
         logger.info(f'{img_name} has a cat!')
+        shutil.move(src=img_path,dst=os.path.join(un_id_cat_dir,img_name))
+
 
   return float(num_cat_images)/float(num_images)
 
