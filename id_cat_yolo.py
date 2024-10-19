@@ -31,22 +31,38 @@ def detect_objects(model, image_path):
     
     return img, detected_objects
 
-def get_yolo_format_string(x1, y1, x2, y2, height, width):
-    #Lemamaesh!
-    pass
+def write_classes_file(pic_path, cat_names):
+    classes_path = os.path.join(pic_path,'classes.txt')
+    with open(classes_path,'w') as CLASSES:
+        for i in range(0,len(cat_names)):
+            CLASSES.write(f'{cat_names[i]}\n')
+    return 0
 
-def label_image(image_name, img, detected_objects, image_label):
+def get_yolo_format_string(x1, y1, x2, y2, height, width, image_class_idx):
+    mid_x_int = int((int(x2) + int(x1))/2)
+    mid_x_float = mid_x_int/float(width)
+    rect_width_int = int(x2)-int(x1)
+    rect_width_float = float(rect_width_int)/float(width)
+
+    mid_y_int = int((int(y2) + int(y1))/2)
+    mid_y_float = mid_y_int/float(height)
+    rect_height_int = int(y2)-int(y1)
+    rect_height_float = float(rect_height_int)/float(height)
+    
+    return f'{image_class_idx} {mid_x_float} {mid_y_float} {rect_width_float} {rect_height_float}'
+
+def label_image(image_name, img, detected_objects, image_class_idx):
+    label_file_path = image_name +'.xml.txt'
     for _, obj in detected_objects.iterrows():
         x1, y1, x2, y2 = int(obj['xmin']), int(obj['ymin']), int(obj['xmax']), int(obj['ymax'])
         label = f"{obj['name']} {obj['confidence']:.2f}"
         if obj['name'].lower().strip() == 'cat':
-            #TODO: update to real height!            
-            height = 300
-            #TODO: update to real height!
-            width = 640
-            yolo_str = get_yolo_format_string(int(x1), int(y1), int(x2), int(y2), int(height), int(width))
-            with open(image_name +'.xml.txt', 'w') as LABEL:
-                LABEL.write(yolo_str)
+            width, height = img.size
+            yolo_str = get_yolo_format_string(int(x1), int(y1), int(x2), int(y2), int(height), int(width), image_class_idx)
+            with open(label_file_path, 'w') as LABEL:
+                LABEL.write(yolo_str + '\n')
+    return label_file_path
+    
                 
 
 
